@@ -3,6 +3,7 @@
 ## a wordle solver in your cli
 
 ![](https://cdn.discordapp.com/attachments/792686378366009354/962555114986569768/unknown.png)
+
 this is a simple tool that can solve any wordle. <br/>
 all it really does is filter the words based on the clues you
 give it.
@@ -19,6 +20,7 @@ call `wrdl` and start typing in your clues, and you can view the possible wordle
 
 i used [bubbletea](https://github.com/charmbracelet/bubbletea), [lipgloss](https://github.com/charmbracelet/lipgloss) and [bubbles](https://github.com/charmbracelet/bubbles) to create the clean ui.
 ![](https://cdn.discordapp.com/attachments/792686378366009354/962554941099098203/unknown.png)
+
 the project was built using [cobra](https://github.com/spf13/cobra)
 
 ## Todo
