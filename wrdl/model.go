@@ -16,19 +16,19 @@ type KeyMap struct {
 }
 
 type Model struct {
-	guesses   *Guesses
-	primary   int
-	secondary int
-	keymap    KeyMap
-	help      help.Model
+	guesses *Guesses
+	row     int
+	column  int
+	keymap  KeyMap
+	help    help.Model
 }
 
 func InitialModel() Model {
 	guesses := fresh_guesses()
 	return Model{
-		guesses:   &guesses,
-		primary:   0,
-		secondary: 0,
+		guesses: &guesses,
+		row:     0,
+		column:  0,
 		keymap: KeyMap{
 			quit: key.NewBinding(
 				key.WithKeys("ctrl+c"),
@@ -54,45 +54,53 @@ func (m Model) helpView() string {
 	})
 }
 
-func (m *Model) input(s string) {
-	if m.primary < 6 {
-		if m.secondary < 5 {
-			(*m.guesses)[m.primary][m.secondary] = Guess{s, Incorrect}
-			m.secondary++
-		} else {
-			m.primary++
-			m.secondary = 0
-			m.input(s)
+func (m *Model) input(s string, v Value) {
+	if m.column < 5 {
+		(*m.guesses)[m.row][m.column] = Guess{s, v}
+	} else {
+		m.column = 4
+	}
+
+	m.column++
+	if m.column == 5 {
+		if m.row < 5 {
+			m.column = 0
+			m.row++
 		}
 	}
 }
 
-func (m *Model) delete() {
-	if 0 <= m.primary {
-		if 0 < m.secondary {
-			(*m.guesses)[m.primary][m.secondary-1] = Guess{" ", Empty}
-			m.secondary--
-		} else {
-			m.secondary = 5
-			m.primary--
-			m.delete()
+func (m *Model) delete() Guess {
+	m.column--
+	if m.column == -1 {
+		if m.row > 0 {
+			m.column = 4
+			m.row--
 		}
 	}
+
+	old := Guess{" ", Empty}
+	if m.column >= 0 {
+		old = (*m.guesses)[m.row][m.column]
+		(*m.guesses)[m.row][m.column] = Guess{" ", Empty}
+	} else {
+		m.column = 0
+	}
+
+	return old
 }
 
 func (m *Model) change_value() {
-	if m.primary >= 0 && m.secondary >= 0 {
-		if m.secondary-1 < 0 {
-			m.secondary = 5
-			m.primary--
-		}
-
-		if (*m.guesses)[m.primary][m.secondary-1].v < 2 {
-			(*m.guesses)[m.primary][m.secondary-1].v++
+	old := m.delete()
+	if old.v != 3 {
+		if old.v == 2 {
+			old.v = 0
 		} else {
-			(*m.guesses)[m.primary][m.secondary-1].v = 0
+			old.v++
 		}
+		m.input(old.c, old.v)
 	}
+
 }
 
 func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -111,8 +119,8 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.delete()
 
 		default:
-			if strings.Contains("abcdefghijklmnopqrstuvwxtz", s) {
-				m.input(s)
+			if strings.Contains("abcdefghijklmnopqrstuvwxyz", s) {
+				m.input(s, Incorrect)
 			}
 		}
 	}
@@ -129,14 +137,14 @@ func (m Model) View() string {
 	)
 
 	for _, word := range res {
-		if unique(word) {
+		if !unique(word) {
 			s.WriteString(darkgreytext.Render(word))
 		} else {
 			s.WriteString(greentext.Render(word))
 		}
 		s.WriteRune(' ')
 
-		if i == 71 {
+		if i == 67 {
 			break
 		}
 

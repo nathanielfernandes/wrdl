@@ -61,12 +61,18 @@ func (s Solver) filter(word string) bool {
 	}
 
 	for i, c := range word {
-		l := (*s.letters)[i]
+		var (
+			l = (*s.letters)[i]
+			e = l.exact(c)
+		)
 
-		if !l.exact(c) && l.no_empty() || (strings.ContainsRune(s.must_not_contain, c) || l.invalid(c)) {
-			return false
+		if e {
+			continue
 		}
 
+		if (l.no_empty() && !e) || strings.ContainsRune(s.must_not_contain, c) || l.invalid(c) {
+			return false
+		}
 	}
 
 	return true
